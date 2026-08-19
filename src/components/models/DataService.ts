@@ -23,7 +23,7 @@ export class DataService {
     this.cart = cart;
   }
 public async loadProducts(): Promise<void> {
-  const products: ServerProductsResponse = await this.api.get('/products');
+  const products: ServerProductsResponse = await this.api.get('/product');
   this.catalog.saveProducts(products)
 }
 public async sendOrder(): Promise<void> {

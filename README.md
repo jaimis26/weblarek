@@ -269,7 +269,7 @@ constructor(api: Api, catalog: ProductCatalog, buyer: BuyerData, cart: ShoppingC
    `loadProducts(): Promise<void>`
        Назначение: Получить список товаров с сервера и сохранить его в локальной модели.
        Логика:
-        1.  Выполняет запрос: `await api.get<ServerProductsResponse>('/products')`.
+        1.  Выполняет запрос: `await api.get<ServerProductsResponse>('/product')`.
         2.  Полученный массив (типа `ServerProductsResponse`, то есть `IProduct[]`) передается в модель: `catalog.saveProducts(response)`.
        Возвращаемое значение: `Promise<void>`.
 
