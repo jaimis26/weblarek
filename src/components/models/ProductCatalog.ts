@@ -5,8 +5,6 @@ export class ProductCatalog {
   private selectedProduct: IProduct | null = null;
 
   constructor() {
-    this.products = [];
-    this.selectedProduct = null;
   }
 public saveProducts(products: IProduct[]): void {
     this.products = products;

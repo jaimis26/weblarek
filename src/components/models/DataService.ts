@@ -1,41 +1,20 @@
-import { ProductCatalog } from "./ProductCatalog";
-import { ShoppingCart } from "./ShoppingCart";
-import { BuyerData } from "./BuyerData";
 import { Api } from "../base/Api";
 import { ServerProductsResponse } from "../../types";
 import { OrderPayload } from "../../types";
+import { OrderResponse } from "../../types";
 
 export class DataService {
   private api: Api;
-  private catalog: ProductCatalog;
-  private buyer: BuyerData;
-  private cart: ShoppingCart;
-  
-  constructor(
-    api: Api, 
-    catalog: ProductCatalog, 
-    buyer: BuyerData, 
-    cart: ShoppingCart
-  ) {
+
+  constructor(api: Api) {
     this.api = api;
-    this.catalog = catalog;
-    this.buyer = buyer;
-    this.cart = cart;
   }
-public async loadProducts(): Promise<void> {
-  const products: ServerProductsResponse = await this.api.get('/product');
-  this.catalog.saveProducts(products)
-}
-public async sendOrder(): Promise<void> {
-  const buyerData = this.buyer.getData();
-  if(!buyerData) {
-     throw new Error('Не заполнены данные покупателя!');
+
+  public async loadProducts(): Promise<ServerProductsResponse> {
+    return this.api.get("/product");
   }
-  const items = this.cart.getItems();
-  const payload: OrderPayload = {
-              buyer: buyerData,
-              items: items
-            };
-  await this.api.post('/order/', payload);
-}
+
+  public async sendOrder(payload: OrderPayload): Promise<OrderResponse> {
+     return this.api.post("/order/", payload) as Promise<OrderResponse>;
+  }
 }

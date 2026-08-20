@@ -17,15 +17,23 @@ export interface IProduct {
 }
 
 export interface IBuyer {
-  payment: TPayment;
+  payment: TPayment | null;
   email: string;
   phone: string;
   address: string;
 }
 
-export type ServerProductsResponse = IProduct[];
-
-export interface OrderPayload {
-  buyer: IBuyer;
+export interface ServerProductsResponse {
   items: IProduct[];
+  total: number;
+}
+
+export interface OrderPayload extends IBuyer {
+  items: IProduct[];
+} 
+
+export interface OrderResponse {
+  success: boolean;
+  orderId: number;
+  message: string;
 } 
