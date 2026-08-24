@@ -30,10 +30,10 @@ export interface ServerProductsResponse {
 
 export interface OrderPayload extends IBuyer {
   items: IProduct[];
+  total: number;
 } 
 
 export interface OrderResponse {
-  success: boolean;
-  orderId: number;
-  message: string;
+  id: string;
+  total: number;
 } 

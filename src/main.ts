@@ -51,23 +51,34 @@ console.log("Проверка ProductCatalog завершена!");
 const cart = new ShoppingCart();
 console.log("Старт тестов ShoppingCart...");
 
-const productToAdd = apiProducts.items[0];
+const itemsToAdd = apiProducts.items.slice(0, 3);
 
-if (productToAdd) {
-  cart.addItem(productToAdd);
-  console.log("addItem: Товар добавлен в корзину.");
+if (itemsToAdd.length > 0) {
+  itemsToAdd.forEach((item) => {
+    cart.addItem(item);
+    console.log(`addItem: Товар "${item.title}" добавлен в корзину.`);
+  });
+
   console.log("getCount():", cart.getCount());
-
   const itemsInCart = cart.getItems();
-  console.log("getItems():", itemsInCart.length, "шт.");
-
-  const exists = cart.hasItem(productToAdd.id);
   console.log(
-    "hasItem(" + productToAdd.id + "):",
-    exists ? "НАЙДЕН" : "НЕ НАЙДЕН",
+    "getItems():",
+    itemsInCart.length,
+    "шт. Состав:",
+    itemsInCart.map((i) => i.title),
   );
 
-  const expectedPrice = productToAdd.price ?? 0;
+  const firstProduct = itemsToAdd[0];
+  const exists = cart.hasItem(firstProduct.id);
+  console.log(
+    `hasItem("${firstProduct.title}") до удаления:`,
+    exists ? "НАЙДЕН (ВЕРНО)" : "НЕ НАЙДЕН (ОШИБКА)",
+  );
+
+  const expectedPrice = itemsToAdd.reduce(
+    (sum, item) => sum + (item.price ?? 0),
+    0,
+  );
   const actualPrice = cart.getTotalPrice();
   console.log(
     "getTotalPrice():",
@@ -76,32 +87,44 @@ if (productToAdd) {
     expectedPrice,
     ")",
   );
-  console.log("Цена совпадает:", actualPrice === expectedPrice);
+  console.log(
+    "Цена совпадает:",
+    actualPrice === expectedPrice
+      ? "ВЕРНО"
+      : "ОШИБКА — проверь метод getTotalPrice()",
+  );
 
-  cart.removeItem(productToAdd.id);
-  console.log("removeItem: Товар удален из корзины.");
+  const productToRemove = itemsToAdd[0];
+  cart.removeItem(productToRemove.id);
+  console.log(`removeItem: Товар "${productToRemove.title}" удалён.`);
 
   console.log("getCount() после удаления:", cart.getCount());
 
-  const stillExists = cart.hasItem(productToAdd.id);
+  const stillExists = cart.hasItem(productToRemove.id);
   console.log(
-    "hasItem после удаления:",
+    `hasItem("${productToRemove.title}") после удаления:`,
     stillExists ? "НАЙДЕН (ОШИБКА)" : "НЕ НАЙДЕН (ВЕРНО)",
   );
 
-  cart.addItem(productToAdd);
-  if (apiProducts.items.length > 1) {
-    cart.addItem(apiProducts.items[1]);
-  }
+  const remainingItems = cart.getItems();
+  console.log(
+    "Оставшиеся товары в корзине:",
+    remainingItems.length,
+    "шт. Состав:",
+    remainingItems.map((i) => i.title),
+  );
 
   console.log("clear: Очистка корзины...");
   cart.clear();
 
   console.log("getCount() после clear:", cart.getCount());
-  console.log("getItems().length:", cart.getItems().length);
+  console.log("getItems().length после clear:", cart.getItems().length);
+
+  const anyProduct = itemsToAdd[itemsToAdd.length - 1];
+  const afterClearExists = cart.hasItem(anyProduct.id);
   console.log(
-    "hasItem (любой товар):",
-    cart.hasItem(productToAdd.id) ? "НАЙДЕН (ОШИБКА)" : "НЕ НАЙДЕН (ВЕРНО)",
+    `hasItem("${anyProduct.title}") после clear:`,
+    afterClearExists ? "НАЙДЕН (ОШИБКА)" : "НЕ НАЙДЕН (ВЕРНО)",
   );
 
   console.log("Все тесты ShoppingCart пройдены успешно!");
