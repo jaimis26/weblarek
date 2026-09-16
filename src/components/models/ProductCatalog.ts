@@ -1,23 +1,27 @@
 import { IProduct } from "../../types";
+import { IEvents } from "../base/Events";
 
 export class ProductCatalog {
   private products: IProduct[] = [];
   private selectedProduct: IProduct | null = null;
 
-  constructor() {
+  constructor(protected events: IEvents) {}
+
+  setProducts(list: IProduct[]) {
+    this.products = list;
+    this.events.emit("catalog:changed");
   }
-public saveProducts(products: IProduct[]): void {
-    this.products = products;
-  }
+
 public getProducts(): IProduct[] {
   return this.products;
 }
 public getProductById(id: string): IProduct | undefined {
   return this.products.find(product => product.id === id);
 }
-public setSelectedProduct(product: IProduct): void {
-  this.selectedProduct = product;
-}
+setSelectedProduct(item: IProduct) {
+    this.selectedProduct = item;
+    this.events.emit("product:changed");
+  }
 public getSelectedProduct(): IProduct | null {
   return this.selectedProduct;
 }

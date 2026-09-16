@@ -11,10 +11,10 @@ export class DataService {
   }
 
   public async loadProducts(): Promise<ServerProductsResponse> {
-    return this.api.get("/product");
+    return this.api.get<ServerProductsResponse>("/product");
   }
 
   public async sendOrder(payload: OrderPayload): Promise<OrderResponse> {
-     return this.api.post("/order/", payload) as Promise<OrderResponse>;
-  }
+    return this.api.post<OrderResponse>("/order/", payload);
+}
 }

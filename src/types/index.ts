@@ -29,7 +29,7 @@ export interface ServerProductsResponse {
 }
 
 export interface OrderPayload extends IBuyer {
-  items: IProduct[];
+  items: string[];
   total: number;
 } 
 
@@ -37,3 +37,6 @@ export interface OrderResponse {
   id: string;
   total: number;
 } 
+
+
+

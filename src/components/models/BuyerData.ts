@@ -1,19 +1,53 @@
 import { IBuyer, TPayment } from "../../types";
+import { IEvents } from "../base/Events";
 
 type BuyerValidationErrors = Partial<Record<keyof IBuyer, string>>;
 
 export class BuyerData {
-  private payment: TPayment | null;
-  private email: string;
-  private phone: string;
-  private address: string;
+  private payment: TPayment | null = null;
+  private email: string = "";
+  private phone: string = "";
+  private address: string = "";
 
-  constructor() {
+  constructor(private events: IEvents) {}
+
+  setPayment(payment: TPayment) {
+    this.payment = payment;
+    this.events.emit("buyer:changed");
+  }
+
+  setEmail(email: string) {
+    this.email = email;
+     this.events.emit("buyer:changed");
+  }
+
+  setPhone(phone: string) {
+    this.phone = phone;
+    this.events.emit("buyer:changed");
+  }
+
+  setAddress(address: string) {
+    this.address = address;
+    this.events.emit("buyer:changed");
+  }
+
+  getBuyerData(): IBuyer {
+    return {
+      payment: this.payment,
+      email: this.email,
+      phone: this.phone,
+      address: this.address,
+    };
+  }
+
+  clearBuyerData() {
     this.payment = null;
     this.email = "";
     this.phone = "";
     this.address = "";
+    this.events.emit("buyer:changed");
   }
+  
   public updateData(data: Partial<IBuyer>): void {
     if (data.payment !== undefined) {
       this.payment = data.payment;
@@ -27,20 +61,6 @@ export class BuyerData {
     if (data.address !== undefined) {
       this.address = data.address;
     }
-  }
-  public getData(): IBuyer {
-    return {
-      payment: this.payment,
-      email: this.email,
-      phone: this.phone,
-      address: this.address,
-    };
-  }
-  public clearData(): void {
-    this.payment = null;
-    this.email = "";
-    this.phone = "";
-    this.address = "";
   }
 
   public validate(): BuyerValidationErrors {
