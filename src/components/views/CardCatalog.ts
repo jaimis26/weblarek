@@ -7,7 +7,7 @@ export interface ICardCatalog extends ICard {
   image: string;
 }
 
-export class Catalog extends Card<ICardCatalog> {
+export class CardCatalog extends Card<ICardCatalog> {
   protected categoryElement: HTMLElement;
   protected imageElement: HTMLImageElement;
 

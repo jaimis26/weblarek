@@ -8,7 +8,7 @@ import { ProductCatalog } from "./components/models/ProductCatalog";
 import { ShoppingCart } from "./components/models/ShoppingCart";
 import { Header } from "./components/views/Header";
 import { Gallery } from "./components/views/Gallery";
-import { Catalog } from "./components/views/Catalog";
+import { CardCatalog } from "./components/views/CardCatalog";
 import { Preview } from "./components/views/Preview";
 import { Modal } from "./components/views/Modal";
 import { CardBasket } from "./components/views/CardBasket";
@@ -16,6 +16,8 @@ import { FormOrder } from "./components/views/FormOrder";
 import { IProduct, TPayment } from "./types";
 import { BuyerData } from "./components/models/BuyerData";
 import { Contacts } from "./components/views/Contacts";
+import { Basket } from "./components/views/Basket";
+import { SuccessView } from "./components/views/Success";
 
 const events = new EventEmitter();
 const api = new Api(API_URL);
@@ -33,19 +35,29 @@ const cardCatalogTemplate = ensureElement<HTMLTemplateElement>("#card-catalog");
 const cardPreviewTemplate = ensureElement<HTMLTemplateElement>("#card-preview");
 const cardBasketTemplate = ensureElement<HTMLTemplateElement>("#card-basket");
 const basketTemplate = ensureElement<HTMLTemplateElement>("#basket");
+const basketContainer = cloneTemplate(basketTemplate);
+const basket = new Basket(events, basketContainer);
+const basketElement = basketContainer;
+
 const orderTemplate = ensureElement<HTMLTemplateElement>("#order");
 const contactsTemplate = ensureElement<HTMLTemplateElement>("#contacts");
 const successTemplate = ensureElement<HTMLTemplateElement>("#success");
+const successContainer = cloneTemplate(successTemplate);
+const successView = new SuccessView(successContainer, events);
+const successElement = successContainer;
 
 const orderContainer = cloneTemplate(orderTemplate) as HTMLFormElement;
 const contactsContainer = cloneTemplate(contactsTemplate) as HTMLFormElement;
+const previewContainer = cloneTemplate(cardPreviewTemplate) as HTMLElement;
 
 const order = new FormOrder(orderContainer, events);
 const contacts = new Contacts(contactsContainer, events);
+const preview = new Preview(previewContainer, events);
+const previewElement = previewContainer;
 
 const getCatalogCards = () =>
   productCatalog.getProducts().map((item) => {
-    const card = new Catalog(cloneTemplate(cardCatalogTemplate), {
+    const card = new CardCatalog(cloneTemplate(cardCatalogTemplate), {
       onClick: () => events.emit("card:select", item),
     });
     return card.render({
@@ -84,14 +96,14 @@ events.on("product:changed", () => {
         ? "Удалить из корзины"
         : "Купить";
 
-  const preview = new Preview(cloneTemplate(cardPreviewTemplate), events);
-  const previewElement = preview.render({
+  preview.render({
     title: item.title,
     price: item.price,
     image: CDN_URL + item.image,
     category: item.category,
     text: item.description || "",
   });
+
   preview.buttonText = buttonText;
   preview.disableBtn = item.price === null;
 
@@ -127,21 +139,40 @@ const getBasketCards = () =>
     return cardContainer;
   });
 
-const renderBasketList = (container: HTMLElement) => {
-  const listEl = ensureElement<HTMLElement>(".basket__list", container);
-  const priceEl = ensureElement<HTMLElement>(".basket__price", container);
-  const btnEl = ensureElement<HTMLButtonElement>(".basket__button", container);
+events.on("basket:delete", (data: { id: string }) => {
+  cart.removeItem(data.id);
+});
 
+events.on("basket:changed", () => {
+  header.counter = cart.getCount();
+  const items = getBasketCards();
+  const total = cart.getTotalPrice();
+  const isEmpty = items.length === 0;
+  basket.list = items;
+  basket.price = total;
+  basket.isDisabled = isEmpty;
+});
+
+events.on("basket:open", () => {
+  modal.content = basketElement;
+  modal.open();
+});
+
+events.on("basket:open", () => {
   const items = getBasketCards();
   const total = cart.getTotalPrice();
   const isEmpty = items.length === 0;
 
-  listEl.replaceChildren(...items);
-  priceEl.textContent = `${total} синапсов`;
-  btnEl.textContent = "Оформить";
-  btnEl.disabled = isEmpty;
+  basket.list = items;
+  basket.price = total;
+  basket.isDisabled = isEmpty;
 
-  if (!btnEl.disabled) {
+  const btnEl = ensureElement<HTMLButtonElement>(
+    ".basket__button",
+    basketContainer,
+  );
+
+  if (!isEmpty) {
     btnEl.addEventListener(
       "click",
       () => {
@@ -150,27 +181,9 @@ const renderBasketList = (container: HTMLElement) => {
       { once: true },
     );
   }
-};
 
-events.on("basket:open", () => {
-  const basketContainer = cloneTemplate(basketTemplate);
-  renderBasketList(basketContainer);
-  modal.content = basketContainer;
+  modal.content = basketElement;
   modal.open();
-});
-
-events.on("basket:delete", (data: { id: string }) => {
-  cart.removeItem(data.id);
-});
-
-events.on("basket:changed", () => {
-  header.counter = cart.getCount();
-  const modalEl = document.querySelector(".modal");
-  if (modalEl && modalEl.classList.contains("modal_active")) {
-    const basketContainer = cloneTemplate(basketTemplate);
-    renderBasketList(basketContainer);
-    modal.content = basketContainer;
-  }
 });
 
 const updateOrderForm = () => {
@@ -181,12 +194,15 @@ const updateOrderForm = () => {
   if (errors.payment) messages.push(errors.payment);
   if (errors.address) messages.push(errors.address);
 
-  return order.render({
+  const isValid = messages.length === 0;
+
+  order.render({
     payment: data.payment,
     address: data.address,
     errors: messages.join(". "),
-    valid: messages.length === 0,
   });
+
+  order.valid = isValid;
 };
 
 const updateContactsForm = () => {
@@ -197,12 +213,15 @@ const updateContactsForm = () => {
   if (errors.email) messages.push(errors.email);
   if (errors.phone) messages.push(errors.phone);
 
-  return contacts.render({
+  const isValid = messages.length === 0;
+
+  contacts.render({
     email: data.email,
     phone: data.phone,
     errors: messages.join(". "),
-    valid: messages.length === 0,
   });
+
+  contacts.valid = isValid;
 };
 
 events.on("payment:change", (data: { payment: TPayment }) => {
@@ -230,14 +249,12 @@ events.on("buyer:changed", () => {
 });
 
 events.on("order:open", () => {
-  const orderElement = updateOrderForm();
-  modal.content = orderElement;
+  modal.content = orderContainer;
   modal.open();
 });
 
 events.on("order:submit", () => {
-  const contactsElement = updateContactsForm();
-  modal.content = contactsElement;
+  modal.content = contactsContainer;
   modal.open();
 });
 
@@ -265,15 +282,9 @@ events.on("contacts:submit", async () => {
     cart.clear();
     buyer.clearBuyerData();
 
-    const successContainer = cloneTemplate(successTemplate);
-    const totalEl = successContainer.querySelector(
-      ".order-success__description",
-    );
-    if (totalEl) {
-      totalEl.textContent = `Списано ${result.total} синапсов`;
-    }
+    successView.totalPrice = result.total;
 
-    modal.content = successContainer;
+    modal.content = successElement;
     modal.open();
   } catch (error) {
     console.error("Не удалось оформить заказ", error);

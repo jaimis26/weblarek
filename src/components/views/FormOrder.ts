@@ -41,7 +41,4 @@ export class FormOrder extends Form<IOrder> {
   set adress(value:string) {
     this.adressElement.value = value;
   }
-  set valid(value: boolean) {
-    this.isDisabled = !value; 
-  }
 }

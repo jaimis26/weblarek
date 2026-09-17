@@ -23,7 +23,4 @@ export class Contacts extends Form<IContacts> {
   set phone(value:string) {
     this.phoneElement.value = value;
   }
-  set valid(value: boolean) {
-    this.isDisabled = !value;
-  }
 }
