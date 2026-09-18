@@ -37,14 +37,12 @@ const cardBasketTemplate = ensureElement<HTMLTemplateElement>("#card-basket");
 const basketTemplate = ensureElement<HTMLTemplateElement>("#basket");
 const basketContainer = cloneTemplate(basketTemplate);
 const basket = new Basket(events, basketContainer);
-const basketElement = basketContainer;
 
 const orderTemplate = ensureElement<HTMLTemplateElement>("#order");
 const contactsTemplate = ensureElement<HTMLTemplateElement>("#contacts");
 const successTemplate = ensureElement<HTMLTemplateElement>("#success");
 const successContainer = cloneTemplate(successTemplate);
 const successView = new SuccessView(successContainer, events);
-const successElement = successContainer;
 
 const orderContainer = cloneTemplate(orderTemplate) as HTMLFormElement;
 const contactsContainer = cloneTemplate(contactsTemplate) as HTMLFormElement;
@@ -139,6 +137,11 @@ const getBasketCards = () =>
     return cardContainer;
   });
 
+const initialItems = getBasketCards();
+basket.list = initialItems;
+basket.price = cart.getTotalPrice();
+basket.isDisabled = initialItems.length === 0;
+
 events.on("basket:delete", (data: { id: string }) => {
   cart.removeItem(data.id);
 });
@@ -148,41 +151,15 @@ events.on("basket:changed", () => {
   const items = getBasketCards();
   const total = cart.getTotalPrice();
   const isEmpty = items.length === 0;
+
   basket.list = items;
   basket.price = total;
   basket.isDisabled = isEmpty;
 });
 
 events.on("basket:open", () => {
-  modal.content = basketElement;
-  modal.open();
-});
-
-events.on("basket:open", () => {
-  const items = getBasketCards();
-  const total = cart.getTotalPrice();
-  const isEmpty = items.length === 0;
-
-  basket.list = items;
-  basket.price = total;
-  basket.isDisabled = isEmpty;
-
-  const btnEl = ensureElement<HTMLButtonElement>(
-    ".basket__button",
-    basketContainer,
-  );
-
-  if (!isEmpty) {
-    btnEl.addEventListener(
-      "click",
-      () => {
-        events.emit("order:open");
-      },
-      { once: true },
-    );
-  }
-
-  modal.content = basketElement;
+  const container = basket.render();
+  modal.content = container;
   modal.open();
 });
 
@@ -249,12 +226,14 @@ events.on("buyer:changed", () => {
 });
 
 events.on("order:open", () => {
-  modal.content = orderContainer;
+  const container = order.render();
+  modal.content = container;
   modal.open();
 });
 
 events.on("order:submit", () => {
-  modal.content = contactsContainer;
+  const container = contacts.render();
+  modal.content = container;
   modal.open();
 });
 
@@ -284,7 +263,8 @@ events.on("contacts:submit", async () => {
 
     successView.totalPrice = result.total;
 
-    modal.content = successElement;
+    const container = successView.render();
+    modal.content = container;
     modal.open();
   } catch (error) {
     console.error("Не удалось оформить заказ", error);
